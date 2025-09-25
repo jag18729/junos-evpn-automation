@@ -5,14 +5,26 @@ Quick example: Configure VXLAN on a single device
 
 from jnpr.junos import Device
 from jnpr.junos.utils.config import Config
+from jnpr.junos.exception import ConnectError, ConfigLoadError, CommitError, RpcError
 
 
 def quick_vxlan_setup(host, username, password):
     """Quick VXLAN configuration example"""
     
-    # Connect to device
+    # Basic input validation
+    if not host or not username or not password:
+        print("Error: host, username, and password are required.")
+        return
+
     device = Device(host=host, user=username, password=password)
-    device.open()
+    try:
+        device.open()
+    except ConnectError as exc:
+        print(f"Connection failed to {host}: {exc}")
+        return
+    except Exception as exc:
+        print(f"Unexpected error opening connection to {host}: {exc}")
+        return
     
     # VXLAN configuration
     vxlan_config = """
@@ -40,18 +52,41 @@ def quick_vxlan_setup(host, username, password):
     """
     
     # Load and commit configuration
-    with Config(device) as cu:
-        cu.load(vxlan_config, format='text')
-        cu.commit(comment='Quick VXLAN setup')
-    
-    device.close()
+    try:
+        with Config(device) as cu:
+            try:
+                cu.load(vxlan_config, format='text')
+            except ConfigLoadError as exc:
+                print(f"Failed to load configuration on {host}: {exc}")
+                return
+            except RpcError as exc:
+                print(f"RPC error during load on {host}: {exc}")
+                return
+
+            try:
+                cu.commit(comment='Quick VXLAN setup')
+            except CommitError as exc:
+                print(f"Commit failed on {host}: {exc}")
+                return
+            except RpcError as exc:
+                print(f"RPC error during commit on {host}: {exc}")
+                return
+    finally:
+        try:
+            if device and device.connected:
+                device.close()
+        except Exception as exc:
+            print(f"Warning: failed to close connection to {host}: {exc}")
+
     print(f"VXLAN configured on {host}")
 
 
 if __name__ == '__main__':
     # Example usage
-    host = input("Device IP: ")
-    username = input("Username: ")
-    password = input("Password: ")
-    
-    quick_vxlan_setup(host, username, password)
+    try:
+        host = input("Device IP: ")
+        username = input("Username: ")
+        password = input("Password: ")
+        quick_vxlan_setup(host, username, password)
+    except KeyboardInterrupt:
+        print("\nOperation cancelled by user.")
