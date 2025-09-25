@@ -1,0 +1,62 @@
+# Fabric configuration for EVPN/VXLAN deployment
+fabric:
+  name: "DC1"
+  asn: 65000
+  
+  # Underlay network settings
+  underlay:
+    ipv4_pool: "10.0.0.0/24"
+    ipv6_pool: "fd00::/64"
+    loopback_pool: "192.168.0.0/24"
+    mtu: 9216
+    
+  # Overlay EVPN settings  
+  overlay:
+    route_reflector:
+      - "192.168.0.1"
+      - "192.168.0.2"
+    vni_range:
+      start: 10000
+      end: 19999
+      
+# Spine switches
+spines:
+  count: 2
+  model: "QFX5120-32C"
+  base_config:
+    hostname_prefix: "spine"
+    management_vrf: "mgmt_junos"
+    
+# Leaf switches
+leafs:
+  count: 4
+  model: "QFX5120-48Y"
+  base_config:
+    hostname_prefix: "leaf"
+    redundancy_groups: 2  # For multihoming
+    
+# Zero Trust zones
+zones:
+  - name: "production"
+    vni_base: 10000
+    subnets:
+      - "172.16.0.0/24"
+      - "172.16.1.0/24"
+  - name: "development"
+    vni_base: 11000
+    subnets:
+      - "172.17.0.0/24"
+  - name: "dmz"
+    vni_base: 12000
+    subnets:
+      - "172.18.0.0/24"
+      
+# RBAC roles
+rbac:
+  roles:
+    - name: "network_admin"
+      permissions: ["read", "write", "execute"]
+    - name: "network_operator"
+      permissions: ["read", "execute"]
+    - name: "network_viewer"
+      permissions: ["read"]

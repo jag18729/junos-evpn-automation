@@ -1,0 +1,139 @@
+{# Spine Switch Configuration Template #}
+system {
+    host-name {{ spine.name }};
+    root-authentication {
+        encrypted-password "$6$encrypted$password";
+    }
+    services {
+        ssh {
+            root-login deny;
+            protocol-version v2;
+        }
+        netconf {
+            ssh;
+        }
+    }
+    syslog {
+        file messages {
+            any notice;
+            authorization info;
+        }
+    }
+    ntp {
+        server 192.168.1.1;
+        server 192.168.1.2;
+    }
+}
+
+interfaces {
+    {# Loopback interface #}
+    lo0 {
+        unit 0 {
+            family inet {
+                address {{ spine.loopback }}/32;
+            }
+        }
+    }
+    
+    {# Management interface #}
+    em0 {
+        unit 0 {
+            family inet {
+                address {{ spine.mgmt_ip }}/24;
+            }
+        }
+    }
+    
+    {# Fabric interfaces to leafs #}
+    {% for link in p2p_links if link.spine == spine.name %}
+    et-0/0/{{ loop.index0 }} {
+        description "To {{ link.leaf }}";
+        mtu {{ config.fabric.underlay.mtu }};
+        unit 0 {
+            family inet {
+                address {{ link.spine_ip }}/31;
+            }
+        }
+    }
+    {% endfor %}
+}
+
+routing-options {
+    router-id {{ spine.loopback }};
+    autonomous-system {{ spine.asn }};
+    forwarding-table {
+        export LOAD_BALANCE;
+    }
+}
+
+protocols {
+    bgp {
+        group UNDERLAY {
+            type external;
+            mtu-discovery;
+            import UNDERLAY_IN;
+            export UNDERLAY_OUT;
+            multipath multiple-as;
+            {% for link in p2p_links if link.spine == spine.name %}
+            neighbor {{ link.leaf_ip }} {
+                description {{ link.leaf }};
+                peer-as {{ link.leaf_asn }};
+            }
+            {% endfor %}
+        }
+        group OVERLAY {
+            type internal;
+            local-address {{ spine.loopback }};
+            family evpn {
+                signaling;
+            }
+            cluster {{ spine.loopback }};
+            multipath;
+            {% for leaf in leafs %}
+            neighbor {{ leaf.loopback }} {
+                description {{ leaf.name }};
+            }
+            {% endfor %}
+        }
+    }
+    
+    lldp {
+        interface all;
+    }
+}
+
+policy-options {
+    policy-statement UNDERLAY_IN {
+        term LOOPBACKS {
+            from {
+                protocol bgp;
+                route-filter 192.168.0.0/24 orlonger;
+            }
+            then accept;
+        }
+        term REJECT {
+            then reject;
+        }
+    }
+    
+    policy-statement UNDERLAY_OUT {
+        term LOOPBACK {
+            from {
+                protocol direct;
+                route-filter {{ spine.loopback }}/32 exact;
+            }
+            then accept;
+        }
+        term REJECT {
+            then reject;
+        }
+    }
+    
+    policy-statement LOAD_BALANCE {
+        term ECMP {
+            then {
+                load-balance per-packet;
+            }
+        }
+    }
+}

@@ -1,0 +1,24 @@
+# Core dependencies
+junos-eznc>=2.6.0
+ncclient>=0.6.13
+paramiko>=2.12.0
+jinja2>=3.1.0
+pyyaml>=6.0
+netaddr>=0.8.0
+
+# Automation tools
+ansible>=2.9.0
+napalm>=4.0.0
+
+# Validation and testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Security and RBAC
+cryptography>=3.4.8
+bcrypt>=3.2.0
+
+# Utilities
+click>=8.0.0
+rich>=13.0.0
+tabulate>=0.9.0

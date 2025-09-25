@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Junos
+*.conf.bak
+*.log
+*.tgz
+
+# Generated configs
+configs/generated/
+
+# Credentials
+*.key
+*.pem
+secrets.yaml
+credentials.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+ztp/configs/*.conf
+ztp/images/*.tgz
+validation_report*.txt

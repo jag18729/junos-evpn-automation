@@ -1,0 +1,55 @@
+# ZTP Server Configuration
+ztp:
+  server_ip: "192.168.1.10"
+  http_port: 8080
+  tftp_port: 69
+  
+  dhcp:
+    subnet: "192.168.1.0"
+    netmask: "255.255.255.0"
+    range_start: "192.168.1.100"
+    range_end: "192.168.1.200"
+    gateway: "192.168.1.1"
+    dns_servers:
+      - "8.8.8.8"
+      - "8.8.4.4"
+  
+  junos_images:
+    qfx5120: "jinstall-qfx-5-21.4R3.15-signed.tgz"
+    ex4300: "jinstall-ex-4300-21.4R3.15-signed.tgz"
+  
+  phone_home:
+    enabled: true
+    endpoint: "http://192.168.1.10:8081/register"
+    retry_count: 3
+    retry_interval: 60
+
+# Device inventory for ZTP
+devices:
+  spines:
+    - hostname: "spine1"
+      mac: "00:50:56:01:01:01"
+      ip: "192.168.1.11"
+      model: "qfx5120"
+    - hostname: "spine2"
+      mac: "00:50:56:01:01:02"
+      ip: "192.168.1.12"
+      model: "qfx5120"
+  
+  leafs:
+    - hostname: "leaf1"
+      mac: "00:50:56:02:01:01"
+      ip: "192.168.1.21"
+      model: "qfx5120"
+    - hostname: "leaf2"
+      mac: "00:50:56:02:01:02"
+      ip: "192.168.1.22"
+      model: "qfx5120"
+    - hostname: "leaf3"
+      mac: "00:50:56:02:01:03"
+      ip: "192.168.1.23"
+      model: "qfx5120"
+    - hostname: "leaf4"
+      mac: "00:50:56:02:01:04"
+      ip: "192.168.1.24"
+      model: "qfx5120"
