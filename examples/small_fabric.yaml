@@ -1,0 +1,48 @@
+# Small fabric example - 2 spines, 2 leafs
+fabric:
+  name: "LAB"
+  asn: 65100
+  
+  underlay:
+    ipv4_pool: "10.1.0.0/24"
+    loopback_pool: "192.168.100.0/24"
+    mtu: 9216
+    
+  overlay:
+    route_reflector:
+      - "192.168.100.1"
+      - "192.168.100.2"
+    vni_range:
+      start: 5000
+      end: 5999
+
+spines:
+  count: 2
+  model: "QFX5120-32C"
+  base_config:
+    hostname_prefix: "lab-spine"
+    management_vrf: "mgmt_junos"
+
+leafs:
+  count: 2
+  model: "QFX5120-48Y"
+  base_config:
+    hostname_prefix: "lab-leaf"
+    redundancy_groups: 1
+
+zones:
+  - name: "servers"
+    vni_base: 5000
+    subnets:
+      - "172.20.10.0/24"
+  - name: "storage"
+    vni_base: 5100
+    subnets:
+      - "172.20.20.0/24"
+
+rbac:
+  roles:
+    - name: "lab_admin"
+      permissions: ["read", "write", "execute"]
+    - name: "lab_viewer"
+      permissions: ["read"]
